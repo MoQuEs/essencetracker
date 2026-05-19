@@ -319,11 +319,15 @@
                     .then(res => res.json())
                     .then(json => {
                         setData(json);
-                        if (!priorities) {
-                            const initial = {};
-                            json.weapons.forEach(w => { initial[w.name] = w.rarity === 3 ? 0 : 1; });
-                            setPriorities(initial);
-                        }
+                        setPriorities(prev => {
+                            const merged = { ...(prev || {}) };
+                            json.weapons.forEach(w => {
+                                if (merged[w.name] === undefined) {
+                                    merged[w.name] = w.rarity === 3 ? 0 : 1;
+                                }
+                            });
+                            return merged;
+                        });
                     });
             }, []);
 
