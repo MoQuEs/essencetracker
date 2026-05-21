@@ -553,7 +553,7 @@
                                     attrItems: attrSel,
                                     selItem: sel.val,
                                     engravingGroups: {
-                                        top: attrSel,
+                                        primary: attrSel,
                                         secondary: sel.type === 'secondary' ? [sel.val] : [],
                                         skill: sel.type === 'skill' ? [sel.val] : []
                                     },
@@ -627,14 +627,14 @@
             }, [groupedWeapons, priorities]);
 
             const ENGRAVING_CATEGORIES = [
-                { key: 'top', label: 'Top' },
+                { key: 'primary', label: 'Primary' },
                 { key: 'secondary', label: 'Secondary' },
                 { key: 'skill', label: 'Skill' }
             ];
 
             const renderEngravingGroups = (engravingGroups) => {
                 const normalizedGroups = {
-                    top: engravingGroups?.top || [],
+                    primary: engravingGroups?.primary || [],
                     secondary: engravingGroups?.secondary || [],
                     skill: engravingGroups?.skill || []
                 };
@@ -643,7 +643,7 @@
                     <div className="d-flex flex-column gap-1 mt-1">
                         {ENGRAVING_CATEGORIES.map(category => (
                             <div key={category.key} className="d-flex flex-wrap gap-1 align-items-center">
-                                <span style={{fontSize: '0.65rem', color: '#666', fontWeight: 'bold', minWidth: '65px'}}>{category.label}:</span>
+                                <span style={{fontSize: '0.65rem', color: '#aaa', fontWeight: 'bold', minWidth: '65px'}}>{category.label}:</span>
                                 {normalizedGroups[category.key].length > 0 ? (
                                     normalizedGroups[category.key].map((value, vi) => (
                                         <span key={`${category.key}-${vi}-${value}`} className="stat-badge" style={{color: '#888'}}>{value}</span>
@@ -747,7 +747,7 @@
                                     <div>
                                         <h4 className="m-0 color-p1">{selectedResult.location}</h4>
                                         <div className="mt-2">
-                                            <span style={{fontSize: '0.7rem', color: '#666', fontWeight: 'bold'}}>ENGRAVINGS:</span>
+                                            <span style={{fontSize: '0.7rem', color: '#aaa', fontWeight: 'bold'}}>ENGRAVINGS:</span>
                                             {renderEngravingGroups(selectedResult.engravingGroups)}
                                         </div>
                                     </div>
@@ -826,7 +826,7 @@
                                             {(!collapsedCategories[cat] || filter) && (
                                                 <div className="row g-3">
                                                     {groupedWeapons[cat].map(w => (
-                                                        <div key={w.name} className="col-xl-6">
+                                                        <div key={w.name} className="col-sm-6">
                                                             <div className={`weapon-card priority-${priorities[w.name]}`} onClick={() => togglePriority(w.name)}>
                                                                 <div className={`card-accent accent-${w.rarity}`}></div>
                                                                 {priorities[w.name] === 2 && <span className="star-icon">★</span>}
