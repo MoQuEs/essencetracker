@@ -334,6 +334,10 @@
             });
             const [filter, setFilter] = useState('');
             const [showResetModal, setShowResetModal] = useState(false);
+            const [showImportExportModal, setShowImportExportModal] = useState(false);
+            const [importExportMode, setImportExportMode] = useState('export');
+            const [importExportText, setImportExportText] = useState('');
+            const [importExportError, setImportExportError] = useState('');
             const [selectedResult, setSelectedResult] = useState(null);
             const [activeTooltip, setActiveTooltip] = useState(null);
             const [collapsedCategories, setCollapsedCategories] = useState(() => {
@@ -371,27 +375,31 @@
             // Back button handling
             useEffect(() => {
                 const handlePopState = (e) => {
-                    if (selectedResult || showResetModal) {
+                    if (selectedResult || showResetModal || showImportExportModal) {
                         setSelectedResult(null);
                         setShowResetModal(false);
+                        setShowImportExportModal(false);
+                        setImportExportError('');
                     }
                 };
                 window.addEventListener('popstate', handlePopState);
                 return () => window.removeEventListener('popstate', handlePopState);
-            }, [selectedResult, showResetModal]);
+            }, [selectedResult, showResetModal, showImportExportModal]);
 
             useEffect(() => {
-                if (selectedResult || showResetModal) {
+                if (selectedResult || showResetModal || showImportExportModal) {
                     if (!window.history.state?.modal) {
                         window.history.pushState({ modal: true }, '');
                     }
                 }
-            }, [selectedResult, showResetModal]);
+            }, [selectedResult, showResetModal, showImportExportModal]);
 
             const closeModals = () => {
-                if (selectedResult || showResetModal) {
+                if (selectedResult || showResetModal || showImportExportModal) {
                     setSelectedResult(null);
                     setShowResetModal(false);
+                    setShowImportExportModal(false);
+                    setImportExportError('');
                     if (window.history.state?.modal) {
                         window.history.back();
                     }
@@ -402,6 +410,79 @@
                 const initial = {};
                 data.weapons.forEach(w => { initial[w.name] = w.rarity === 3 ? 0 : 1; });
                 setPriorities(initial);
+                closeModals();
+            };
+
+            const openImportExportModal = (mode) => {
+                setImportExportMode(mode);
+                setImportExportError('');
+                if (mode === 'export') {
+                    setImportExportText(JSON.stringify(priorities || {}, null, 2));
+                } else {
+                    setImportExportText('');
+                }
+                setShowImportExportModal(true);
+            };
+
+            const handleExportPriorities = () => {
+                setImportExportMode('export');
+                setImportExportError('');
+                setImportExportText(JSON.stringify(priorities || {}, null, 2));
+            };
+
+            const handleImportPriorities = () => {
+                if (!data) return;
+
+                let parsed;
+                try {
+                    parsed = JSON.parse(importExportText);
+                } catch (err) {
+                    setImportExportError('Invalid JSON. Please paste a valid JSON object.');
+                    return;
+                }
+
+                if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                    setImportExportError('JSON must be an object in the format {"Weapon Name": 0|1|2}.');
+                    return;
+                }
+
+                const parsedEntries = Object.entries(parsed);
+                const hasInvalidPriority = parsedEntries.some(([, value]) => ![0, 1, 2].includes(value));
+                if (hasInvalidPriority) {
+                    setImportExportError('Each priority value must be exactly 0, 1, or 2.');
+                    return;
+                }
+
+                const knownWeapons = new Set(data.weapons.map(w => w.name));
+                const nextPriorities = {};
+
+                // Preserve unknown keys from existing priorities.
+                Object.entries(priorities || {}).forEach(([name, value]) => {
+                    if (!knownWeapons.has(name) && [0, 1, 2].includes(value)) {
+                        nextPriorities[name] = value;
+                    }
+                });
+
+                // Full replace for known weapons: import value if present,
+                // otherwise keep current priority, otherwise fall back to default.
+                data.weapons.forEach(w => {
+                    if (Object.prototype.hasOwnProperty.call(parsed, w.name)) {
+                        nextPriorities[w.name] = parsed[w.name];
+                    } else {
+                        nextPriorities[w.name] = (priorities[w.name] !== undefined)
+                            ? priorities[w.name]
+                            : (w.rarity === 3 ? 0 : 1);
+                    }
+                });
+
+                // Also keep unknown keys from imported JSON.
+                parsedEntries.forEach(([name, value]) => {
+                    if (!knownWeapons.has(name)) {
+                        nextPriorities[name] = value;
+                    }
+                });
+
+                setPriorities(nextPriorities);
                 closeModals();
             };
 
@@ -623,6 +704,42 @@
                         </div>
                     )}
 
+                    {showImportExportModal && (
+                        <div className="custom-modal-overlay" onClick={closeModals}>
+                            <div className="custom-modal" style={{maxWidth: '700px'}} onClick={e => e.stopPropagation()}>
+                                <h4 className="mb-3">Priority Import / Export</h4>
+                                <div className="d-flex gap-2 mb-3">
+                                    <button className="reset-btn" onClick={handleExportPriorities}>EXPORT JSON</button>
+                                    <button className="reset-btn" onClick={() => { setImportExportMode('import'); setImportExportError(''); }}>IMPORT JSON</button>
+                                </div>
+                                <label for="importExportTextarea" style={{ color: '#aaa', fontSize: '0.85rem' }}>
+                                    {importExportMode === 'export'
+                                        ? 'Copy this JSON to export your saved priorities.'
+                                        : 'Paste JSON object in format {"Weapon Name": 0|1|2}. Known weapons are fully replaced; Added weapons between export and import are preserved.'}
+                                </label>
+                                <textarea
+                                    id="importExportTextarea"
+                                    className="form-control form-control-sm bg-dark text-light border-secondary"
+                                    rows="14"
+                                    value={importExportText}
+                                    readOnly={importExportMode === 'export'}
+                                    onChange={e => setImportExportText(e.target.value)}
+                                    placeholder='{"Weapon Name": 2}'
+                                    style={{fontFamily: 'Consolas, Monaco, monospace'}}
+                                />
+                                {importExportError && (
+                                    <div className="mt-2" style={{color: '#ff8a8a', fontSize: '0.85rem'}}>{importExportError}</div>
+                                )}
+                                <div className="modal-buttons">
+                                    {importExportMode === 'import' && (
+                                        <button className="modal-btn btn-confirm" onClick={handleImportPriorities}>IMPORT</button>
+                                    )}
+                                    <button className="modal-btn btn-cancel" onClick={closeModals}>CLOSE</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {selectedResult && (
                         <div className="custom-modal-overlay" onClick={closeModals}>
                             <div className="custom-modal" onClick={e => e.stopPropagation()}>
@@ -676,11 +793,15 @@
                             <div className="mb-3">
                                 <div className="d-flex justify-content-between align-items-center mb-2">
                                     <h3 className="m-0 fw-bold">ESSENCE TARGETS</h3>
-                                    <button className="reset-btn" onClick={() => setShowResetModal(true)}>RESET</button>
+                                    <div className="d-flex gap-2">
+                                        <button className="reset-btn" onClick={() => openImportExportModal('export')}>EXPORT</button>
+                                        <button className="reset-btn" onClick={() => openImportExportModal('import')}>IMPORT</button>
+                                        <button className="reset-btn" onClick={() => setShowResetModal(true)}>RESET</button>
+                                    </div>
                                 </div>
                                 <div className="d-flex gap-2 align-items-center">
-                                    <span style={{fontSize: '0.8rem', color: '#666', fontWeight: 'bold'}}>SEARCH:</span>
-                                    <input type="text" className="form-control form-control-sm bg-dark text-light border-secondary" placeholder="..." value={filter} onChange={e => setFilter(e.target.value)} style={{flex: 1}} />
+                                    <label for="search" style={{fontSize: '0.8rem', color: '#666', fontWeight: 'bold'}}>SEARCH:</label>
+                                    <input id="search" type="text" className="form-control form-control-sm bg-dark text-light border-secondary" placeholder="..." value={filter} onChange={e => setFilter(e.target.value)} style={{flex: 1}} />
                                 </div>
                             </div>
                             
