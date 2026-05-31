@@ -465,8 +465,8 @@
             const weaponNameToImageName = (name) =>
                     normalizeName(name.toLowerCase());
 
-            const weaponPlaceholder = (name) =>
-                'https://placehold.co/256x256/webp?text=' + normalizeName(name).replace(/[a-z]/g, '').replace(/_+/g, '%20');
+            const weaponPlaceholder = (categoryType) =>
+                `images/weaponcategory_${weaponNameToImageName(categoryType)}.png`;
 
             const closeModals = () => {
                 if (selectedResult || showResetModal || showImportExportModal || showEssenceCheckerModal) {
@@ -818,7 +818,7 @@
                         >
                             {isP2 && <span className="star-icon" style={{top: '4px', right: '6px', fontSize: '1rem'}}>★</span>}
                             <div className={`weapon-img-container img-bg-${w.rarity}`} style={{width: '40px', height: '40px', minWidth: '40px'}}>
-                                <img src={`images/weapon_${w.name.toLowerCase().replace(/ /g, '_').replace(/:/g, '').replace(/'/g, '')}.png`} className="weapon-img" alt={w.name} onError={(e) => { e.target.onerror = null; e.target.src = weaponPlaceholder(w.name); }} />
+                                <img src={`images/weapon_${weaponNameToImageName(w.name)}.png`} className="weapon-img" alt={w.name} onError={(e) => { e.target.onerror = null; e.target.src = weaponPlaceholder(w.type); }} />
                             </div>
                             <div className="flex-grow-1 min-width-0">
                                 <div className={`fw-bold text-truncate ${colorClass}`} style={{fontSize: '0.9rem'}}>{w.name}</div>
@@ -851,7 +851,7 @@
                         >
                             {isP2 && <span className="star-icon" style={{top: '4px', right: '6px', fontSize: '1rem'}}>★</span>}
                             <div className={`weapon-img-container img-bg-${w.rarity}`} style={{width: '40px', height: '40px', minWidth: '40px'}}>
-                                <img src={`images/weapon_${weaponNameToImageName(w.name)}.png`} className="weapon-img" alt="" onError={(e) => { e.target.onerror = null; e.target.src = weaponPlaceholder(w.name); }} />
+                                <img src={`images/weapon_${weaponNameToImageName(w.name)}.png`} className="weapon-img" alt="" onError={(e) => { e.target.onerror = null; e.target.src = weaponPlaceholder(w.type); }} />
                             </div>
                             <div className="flex-grow-1 min-width-0">
                                 <div className={`fw-bold text-truncate ${colorClass}`} style={{fontSize: '0.9rem'}}>{w.name}</div>
@@ -1124,7 +1124,7 @@
 
                                                                 <div className="d-flex align-items-center">
                                                                     <div className={`weapon-img-container img-bg-${w.rarity}`}>
-                                                                        <img src={`images/weapon_${weaponNameToImageName(w.name)}.png`} className="weapon-img" alt={w.name} onError={(e) => { e.target.onerror = null; e.target.src = weaponPlaceholder(w.name); }} />
+                                                                        <img src={`images/weapon_${weaponNameToImageName(w.name)}.png`} className="weapon-img" alt={w.name} onError={(e) => { e.target.onerror = null; e.target.src = weaponPlaceholder(w.type); }} />
                                                                     </div>
                                                                     <div className="flex-grow-1 min-width-0">
                                                                         <div className={`fw-bold text-truncate ${priorities[w.name] === 2 ? 'color-p2' : (priorities[w.name] === 1 ? 'color-p1' : 'color-p0')}`} style={{fontSize: '1rem'}}>{w.name}</div>
