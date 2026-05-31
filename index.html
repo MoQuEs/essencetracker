@@ -445,7 +445,6 @@
                         setShowImportExportModal(false);
                         setShowEssenceCheckerModal(false);
                         setImportExportError('');
-                        setCheckerFilters({ attribute: 'None', secondary: 'None', skill: 'None' });
                     }
                 };
                 window.addEventListener('popstate', handlePopState);
@@ -476,7 +475,6 @@
                     setShowImportExportModal(false);
                     setShowEssenceCheckerModal(false);
                     setImportExportError('');
-                    setCheckerFilters({ attribute: 'None', secondary: 'None', skill: 'None' });
                     if (window.history.state?.modal) {
                         window.history.back();
                     }
@@ -488,7 +486,6 @@
             };
 
             const openEssenceCheckerModal = () => {
-                resetCheckerFilters();
                 setShowEssenceCheckerModal(true);
             };
 
