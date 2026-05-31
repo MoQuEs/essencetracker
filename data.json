@@ -1,4 +1,44 @@
 {
+  "attribute": [
+    "None",
+    "Agility",
+    "Intellect",
+    "Main Attribute",
+    "Strength",
+    "Will"
+  ],
+  "secondary": [
+    "None",
+    "Arts DMG Boost",
+    "Arts Intensity Boost",
+    "Attack Boost",
+    "Critical Rate Boost",
+    "Cryo DMG Boost",
+    "Electric DMG Boost",
+    "HP Boost",
+    "Heat DMG Boost",
+    "Nature DMG Boost",
+    "Physical DMG Boost",
+    "Treatment Efficiency Boost",
+    "Ultimate Gain Boost"
+  ],
+  "skill": [
+    "None",
+    "Assault",
+    "Brutality",
+    "Combative",
+    "Crusher",
+    "Detonate",
+    "Efficacy",
+    "Flow",
+    "Fracture",
+    "Infliction",
+    "Inspiring",
+    "Medicant",
+    "Pursuit",
+    "Suppression",
+    "Twilight"
+  ],
   "weapons": [
     {
       "name": "Sundered Prince",
