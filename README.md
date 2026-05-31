@@ -10,8 +10,11 @@ An interactive tool for tracking and optimizing weapon essence engravings.
 ### Engraving Details
 ![Selection Details](images/preview_detail.png)
 
+### Essence Checker
+![Essence checker](images/preview_checker.png)
+
 ## How to Use
-1. Open the [Weapon Essence Tracker](https://nakomaru.github.io/essencetracker/).
+1. Open the [Weapon Essence Tracker](https://moques.github.io/essencetracker/) or original [Weapon Essence Tracker](https://nakomaru.github.io/essencetracker/).
 2. Click on weapons in the **Essence Targets** section to cycle priorities.
 3. View the **Essence Matches** table to find locations with the most matches for your current targets.
 4. Click on a match for a summary.

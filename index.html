@@ -460,6 +460,15 @@
                 }
             }, [selectedResult, showResetModal, showImportExportModal, showEssenceCheckerModal]);
 
+            const normalizeName = (name) =>
+                    name.replace(/ /g, '_').replace(/:/g, '').replace(/'/g, '');
+
+            const weaponNameToImageName = (name) =>
+                    normalizeName(name.toLowerCase());
+
+            const weaponPlaceholder = (name) =>
+                'https://placehold.co/256x256/webp?text=' + normalizeName(name).replace(/[a-z]/g, '').replace(/_+/g, '%20');
+
             const closeModals = () => {
                 if (selectedResult || showResetModal || showImportExportModal || showEssenceCheckerModal) {
                     setSelectedResult(null);
@@ -812,7 +821,7 @@
                         >
                             {isP2 && <span className="star-icon" style={{top: '4px', right: '6px', fontSize: '1rem'}}>★</span>}
                             <div className={`weapon-img-container img-bg-${w.rarity}`} style={{width: '40px', height: '40px', minWidth: '40px'}}>
-                                <img src={`images/weapon_${w.name.toLowerCase().replace(/ /g, '_').replace(/:/g, '').replace(/'/g, '')}.png`} className="weapon-img" alt="" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/256x256/jpg?text=' + w.name[0]; }} />
+                                <img src={`images/weapon_${w.name.toLowerCase().replace(/ /g, '_').replace(/:/g, '').replace(/'/g, '')}.png`} className="weapon-img" alt={w.name} onError={(e) => { e.target.onerror = null; e.target.src = weaponPlaceholder(w.name); }} />
                             </div>
                             <div className="flex-grow-1 min-width-0">
                                 <div className={`fw-bold text-truncate ${colorClass}`} style={{fontSize: '0.9rem'}}>{w.name}</div>
@@ -845,7 +854,7 @@
                         >
                             {isP2 && <span className="star-icon" style={{top: '4px', right: '6px', fontSize: '1rem'}}>★</span>}
                             <div className={`weapon-img-container img-bg-${w.rarity}`} style={{width: '40px', height: '40px', minWidth: '40px'}}>
-                                <img src={`images/weapon_${w.name.toLowerCase().replace(/ /g, '_').replace(/:/g, '').replace(/'/g, '')}.png`} className="weapon-img" alt="" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/256x256/jpg?text=' + w.name[0]; }} />
+                                <img src={`images/weapon_${weaponNameToImageName(w.name)}.png`} className="weapon-img" alt="" onError={(e) => { e.target.onerror = null; e.target.src = weaponPlaceholder(w.name); }} />
                             </div>
                             <div className="flex-grow-1 min-width-0">
                                 <div className={`fw-bold text-truncate ${colorClass}`} style={{fontSize: '0.9rem'}}>{w.name}</div>
@@ -916,15 +925,15 @@
                     {selectedResult && (
                         <div className="custom-modal-overlay" onClick={closeModals}>
                             <div className="custom-modal" onClick={e => e.stopPropagation()}>
-                                <div className="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-2">
-                                    <div>
-                                        <h4 className="m-0 color-p1">{selectedResult.location}</h4>
-                                        <div className="mt-2">
-                                            <span style={{fontSize: '0.7rem', color: '#aaa', fontWeight: 'bold'}}>ENGRAVINGS:</span>
-                                            {renderEngravingGroups(selectedResult.engravingGroups)}
-                                        </div>
+                                <div className="d-flex justify-content-between align-items-center mb-3 border-bottom border-secondary pb-2">
+                                    <h4 className="m-0 color-p1">{selectedResult.location}</h4>
+                                    <div className="d-flex align-items-center gap-2">
+                                        <button className="btn-close btn-close-white" onClick={closeModals}></button>
                                     </div>
-                                    <button className="btn-close btn-close-white" onClick={closeModals}></button>
+                                </div>
+
+                                <div className="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-2">
+                                    {renderEngravingGroups(selectedResult.engravingGroups)}
                                 </div>
 
                                 {selectedResult.p2List.length > 0 && (
@@ -1098,7 +1107,7 @@
                                                 const counts = categoryCounts[cat] || { untracked: 0, tracked: 0, priority: 0 };
                                                 return (
                                                     <div className="category-header mb-3" onClick={() => toggleCategoryCollapse(cat)} style={{cursor: 'pointer'}}>
-                                                        <img src={`images/weaponcategory_${cat.toLowerCase().replace(' ', '_')}.png`} className="category-icon" alt="" />
+                                                        <img src={`images/weaponcategory_${weaponNameToImageName(cat.toLowerCase())}.png`} className="category-icon" alt={cat} />
                                                         <span className="text-uppercase fw-bold category-title">{cat}S</span>
                                                         <div className="category-counters">
                                                             <span className="category-counter-badge color-p0">Untracked: {counts.untracked}</span>
@@ -1118,7 +1127,7 @@
 
                                                                 <div className="d-flex align-items-center">
                                                                     <div className={`weapon-img-container img-bg-${w.rarity}`}>
-                                                                        <img src={`images/weapon_${w.name.toLowerCase().replace(/ /g, '_').replace(/:/g, '').replace(/'/g, '')}.png`} className="weapon-img" alt="" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/256x256/jpg?text=' + w.name[0]; }} />
+                                                                        <img src={`images/weapon_${weaponNameToImageName(w.name)}.png`} className="weapon-img" alt={w.name} onError={(e) => { e.target.onerror = null; e.target.src = weaponPlaceholder(w.name); }} />
                                                                     </div>
                                                                     <div className="flex-grow-1 min-width-0">
                                                                         <div className={`fw-bold text-truncate ${priorities[w.name] === 2 ? 'color-p2' : (priorities[w.name] === 1 ? 'color-p1' : 'color-p0')}`} style={{fontSize: '1rem'}}>{w.name}</div>
