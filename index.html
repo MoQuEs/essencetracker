@@ -282,9 +282,6 @@
                                         skill: sel.type === 'skill' ? [sel.val] : []
                                     },
                                     score: score,
-                                    p2Count: p2Outcomes.length,
-                                    p1Count: p1Outcomes.length,
-                                    p0Count: p0Outcomes.length,
                                     p2List: p2Outcomes,
                                     p1List: p1Outcomes,
                                     p0List: p0Outcomes
@@ -299,10 +296,10 @@
 
                 // If any targets are marked P2, only show combinations that can produce at least one of them.
                 if (anyP2Selected) {
-                    filtered = solverResults.filter(r => r.p2Count > 0);
+                    filtered = solverResults.filter(r => r.p2List.length > 0);
                 }
 
-                filtered = filtered.filter(r => r.p2Count > 0 || r.p1Count > 0);
+                filtered = filtered.filter(r => r.p2List.length > 0 || r.p1List.length > 0);
 
                 return filtered.sort((a, b) => b.score - a.score).slice(0, 100);
             }, [data, priorities]);
@@ -407,13 +404,17 @@
                 );
             };
 
+            const WeaponStats = ({ weapon, classes, constantWidth, wrap }) => (
+                <div className={`d-flex ${wrap ? "flex-wrap" : "flex-column"} gap-1 ${classes}`}>
+                    <span className={`stat-badge ${constantWidth ? "w-100 m-0" : undefined}`}>{weapon.attr_stat}</span>
+                    <span className={`stat-badge ${constantWidth ? "w-100 m-0" : undefined}`}>{weapon.sec_stat}</span>
+                    <span className={`stat-badge ${constantWidth ? "w-100 m-0" : undefined}`}>{weapon.skill_stat}</span>
+                </div>
+            );
+
             const Tooltip = ({ weapon, uniqueId }) => (
                 <div className="stat-tooltip" style={{ display: activeTooltip === uniqueId ? 'block' : undefined }}>
-                    <div className="d-flex flex-column gap-1">
-                        <span className="stat-badge w-100 m-0">{weapon.attr_stat}</span>
-                        <span className="stat-badge w-100 m-0">{weapon.sec_stat}</span>
-                        <span className="stat-badge w-100 m-0">{weapon.skill_stat}</span>
-                    </div>
+                    <WeaponCard w={weapon} compact={true} tooltip={true}/>
                 </div>
             );
 
@@ -441,32 +442,35 @@
                 return Object.fromEntries(data.weapons.map(w => [w.name, w]));
             }, [data]);
 
-            const CompactWeapon = ({ w }) => {
+            const WeaponCard = ({ w, compact, tooltip }) => {
                 const p = priorities[w.name];
                 const colorClass = p === 2 ? 'color-p2' : (p === 1 ? 'color-p1' : 'color-p0');
                 const isP2 = p === 2;
 
                 return (
-                    <div className="col-md-6 col-12 mb-2">
+                    <div className={`${tooltip ? "" : "col-md-6 col-12 mb-2"}`}>
                         <div
-                            className={`compact-weapon-card priority-${p}`}
+                            className={`${compact ? "compact-weapon-card" : "weapon-card"} priority-${p}`}
                             onClick={() => togglePriority(w.name)}
-                            style={{
-                                ...(isP2 ? { boxShadow: '0 0 0 2px #eef6ff', borderColor: '#eef6ff' } : {}),
-                                position: 'relative',
-                                cursor: 'pointer'
-                            }}
                         >
+                            <div className={`card-accent accent-${w.rarity}`}></div>
                             {isP2 && <span className="star-icon" style={{top: '4px', right: '6px', fontSize: '1rem'}}>★</span>}
-                            <div className={`weapon-img-container img-bg-${w.rarity}`} style={{width: '40px', height: '40px', minWidth: '40px'}}>
-                                <img src={`images/weapon_${weaponNameToImageName(w.name)}.png`} className="weapon-img" alt={w.name} onError={(e) => { e.target.onerror = null; e.target.src = weaponPlaceholder(w.type); }} />
-                            </div>
-                            <div className="flex-grow-1 min-width-0">
-                                <div className={`fw-bold text-truncate ${colorClass}`} style={{fontSize: '0.9rem'}}>{w.name}</div>
-                                <div className="d-flex flex-wrap gap-1 mt-1">
-                                    <span className="stat-badge">{w.attr_stat}</span>
-                                    <span className="stat-badge">{w.sec_stat}</span>
-                                    <span className="stat-badge">{w.skill_stat}</span>
+
+                            <div className="d-flex align-items-center">
+                                <div className={`weapon-img-container img-bg-${w.rarity}`}>
+                                    <img src={`images/weapon_${weaponNameToImageName(w.name)}.png`} className="weapon-img" alt={w.name} onError={(e) => { e.target.onerror = null; e.target.src = weaponPlaceholder(w.type); }} />
+                                </div>
+
+                                <div className="flex-grow-1 min-width-0">
+                                    <div className={`fw-bold text-truncate ${colorClass}`} style={{fontSize: '1rem'}}>{w.name}</div>
+
+                                    {!compact && (<div className="d-flex align-items-center mt-1">
+                                        <span className={`color-${w.rarity}-rarity`} style={{fontSize: '0.8rem', fontWeight: 'bold'}}>{w.rarity}★</span>
+                                        <span className="mx-2 text-muted">|</span>
+                                        <span className={`text-uppercase color-${w.rarity}-rarity`} style={{fontSize: '0.7rem'}}>{w.type}</span>
+                                    </div>)}
+
+                                    <WeaponStats weapon={w} classes={`${compact ? "mt-1" : "mt-3 pt-2 border-top border-secondary border-opacity-25"}`} wrap={true}/>
                                 </div>
                             </div>
                         </div>
@@ -474,38 +478,64 @@
                 );
             };
 
-            const CompactUntrackedWeapon = ({ w }) => {
-                const p = priorities[w.name];
-                const colorClass = p === 2 ? 'color-p2' : (p === 1 ? 'color-p1' : 'color-p0');
-                const isP2 = p === 2;
-
-                return (
-                    <div className="col-md-6 col-12 mb-2">
-                        <div
-                            className={`compact-weapon-card priority-${p}`}
-                            onClick={() => togglePriority(w.name)}
-                            style={{
-                                ...(isP2 ? { boxShadow: '0 0 0 2px #eef6ff', borderColor: '#eef6ff' } : {}),
-                                position: 'relative',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            {isP2 && <span className="star-icon" style={{top: '4px', right: '6px', fontSize: '1rem'}}>★</span>}
-                            <div className={`weapon-img-container img-bg-${w.rarity}`} style={{width: '40px', height: '40px', minWidth: '40px'}}>
-                                <img src={`images/weapon_${weaponNameToImageName(w.name)}.png`} className="weapon-img" alt="" onError={(e) => { e.target.onerror = null; e.target.src = weaponPlaceholder(w.type); }} />
-                            </div>
-                            <div className="flex-grow-1 min-width-0">
-                                <div className={`fw-bold text-truncate ${colorClass}`} style={{fontSize: '0.9rem'}}>{w.name}</div>
-                                <div className="d-flex flex-wrap gap-1 mt-1">
-                                    <span className="stat-badge">{w.attr_stat}</span>
-                                    <span className="stat-badge">{w.sec_stat}</span>
-                                    <span className="stat-badge">{w.skill_stat}</span>
-                                </div>
-                            </div>
-                        </div>
+            const EssenceMatchesList = ({ list, p, listIndex }) => (
+                <div className="outcome-row">
+                    <div className="weapon-container-right">
+                        {list.map(o => {
+                            const uid = `${p}-${listIndex}-${o.name}`;
+                            return (
+                                <span key={uid}
+                                      className={`weapon-name-box color-${p}`}
+                                      onMouseEnter={(e) => { e.stopPropagation(); setActiveTooltip(uid); }}
+                                      onMouseLeave={(e) => { e.stopPropagation(); setActiveTooltip(null); }}
+                                      onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === uid ? null : uid); }}
+                                >
+                                    {o.name}
+                                    <Tooltip weapon={o} uniqueId={uid} />
+                                </span>
+                            );
+                        })}
                     </div>
-                );
-            };
+                </div>
+            );
+
+            const CheckerModalSnapshotList = ({ weapons, text }) => weapons.length > 0 && (
+                <div>
+                    <h6 className="text-uppercase color-p0 mb-3" style={{letterSpacing: '1px'}}>${text} ({weapons.length})</h6>
+                    <div className="row g-2">
+                        {weapons.map(name => {
+                            const weapon = weaponsByName[name];
+                            return weapon ? <WeaponCard key={name} w={weapon} compact={true} /> : null;
+                        })}
+                    </div>
+                </div>
+            );
+
+            const CheckerModalSnapshotCheckboxes = ({ data, text, type }) => (
+                <div className="checker-section">
+                    <div className="text-uppercase fw-bold mb-2" style={{fontSize: '0.78rem', letterSpacing: '0.7px', color: '#aaa'}}>{text}</div>
+                    <div className="d-flex flex-wrap gap-2">
+                        {data[type].map(option => (
+                            <button
+                                key={`${type}-${option}`}
+                                className={`checker-chip ${checkerFilters[type] === option ? 'checker-chip-active' : ''}`}
+                                onClick={() => setCheckerFilters(prev => ({ ...prev, [type]: option }))}
+                            >
+                                {option}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+
+            const SelectedResultList = ({ weapons, text }) => weapons.length > 0 && (
+                <div>
+                    <h6 className="text-uppercase color-p0 mb-3" style={{letterSpacing: '1px'}}>${text} ({weapons.length})</h6>
+                    <div className="row g-2">
+                        {sortWeaponsByRarityThenName(weapons).map(w => <WeaponCard key={w.name} w={w} compact={true} />)}
+                    </div>
+                </div>
+            );
 
             if (!data || !priorities) return <div className="loading-overlay">Loading Data...</div>;
 
@@ -574,32 +604,9 @@
                                     {renderEngravingGroups(selectedResult.engravingGroups)}
                                 </div>
 
-                                {selectedResult.p2List.length > 0 && (
-                                    <div className="mb-4">
-                                        <h6 className="text-uppercase color-p2 mb-3" style={{letterSpacing: '1px'}}>Priority Essences ({selectedResult.p2Count})</h6>
-                                        <div className="row g-2">
-                                            {sortWeaponsByRarityThenName(selectedResult.p2List).map(w => <CompactWeapon key={w.name} w={w} />)}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {selectedResult.p1List.length > 0 && (
-                                    <div className="mb-4">
-                                        <h6 className="text-uppercase color-p1 mb-3" style={{letterSpacing: '1px'}}>Matched Essences ({selectedResult.p1Count})</h6>
-                                        <div className="row g-2">
-                                            {sortWeaponsByRarityThenName(selectedResult.p1List).map(w => <CompactWeapon key={w.name} w={w} />)}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {selectedResult.p0List.length > 0 && (
-                                    <div>
-                                        <h6 className="text-uppercase color-p0 mb-3" style={{letterSpacing: '1px'}}>Untracked Essences ({selectedResult.p0Count})</h6>
-                                        <div className="row g-2">
-                                            {sortWeaponsByRarityThenName(selectedResult.p0List).map(w => <CompactUntrackedWeapon key={w.name} w={w} />)}
-                                        </div>
-                                    </div>
-                                )}
+                                <SelectedResultList weapons={selectedResult.p2List} text="Priority Essences" />
+                                <SelectedResultList weapons={selectedResult.p1List} text="Matched Essences" />
+                                <SelectedResultList weapons={selectedResult.p0List} text="Untracked Essences" />
                             </div>
                         </div>
                     )}
@@ -616,50 +623,9 @@
                                 </div>
                                 <div className="row g-4 checker-modal-body">
                                     <div className="col-lg-5">
-                                        <div className="checker-section" style={{borderTop: 'none', marginTop: 0, paddingTop: 0}}>
-                                            <div className="text-uppercase fw-bold mb-2" style={{fontSize: '0.78rem', letterSpacing: '0.7px', color: '#aaa'}}>Primary Attribute</div>
-                                            <div className="d-flex flex-wrap gap-2">
-                                                {data.attribute.map(option => (
-                                                    <button
-                                                        key={`attr-${option}`}
-                                                        className={`checker-chip ${checkerFilters.attribute === option ? 'checker-chip-active' : ''}`}
-                                                        onClick={() => setCheckerFilters(prev => ({ ...prev, attribute: option }))}
-                                                    >
-                                                        {option}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className="checker-section">
-                                            <div className="text-uppercase fw-bold mb-2" style={{fontSize: '0.78rem', letterSpacing: '0.7px', color: '#aaa'}}>Secondary Stat</div>
-                                            <div className="d-flex flex-wrap gap-2">
-                                                {data.secondary.map(option => (
-                                                    <button
-                                                        key={`sec-${option}`}
-                                                        className={`checker-chip ${checkerFilters.secondary === option ? 'checker-chip-active' : ''}`}
-                                                        onClick={() => setCheckerFilters(prev => ({ ...prev, secondary: option }))}
-                                                    >
-                                                        {option}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className="checker-section">
-                                            <div className="text-uppercase fw-bold mb-2" style={{fontSize: '0.78rem', letterSpacing: '0.7px', color: '#aaa'}}>Skill Stat</div>
-                                            <div className="d-flex flex-wrap gap-2">
-                                                {data.skill.map(option => (
-                                                    <button
-                                                        key={`skill-${option}`}
-                                                        className={`checker-chip ${checkerFilters.skill === option ? 'checker-chip-active' : ''}`}
-                                                        onClick={() => setCheckerFilters(prev => ({ ...prev, skill: option }))}
-                                                    >
-                                                        {option}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
+                                        <CheckerModalSnapshotCheckboxes data={data} text="Primary Attribute" type="attribute" />
+                                        <CheckerModalSnapshotCheckboxes data={data} text="Secondary Stat" type="secondary" />
+                                        <CheckerModalSnapshotCheckboxes data={data} text="Skill Stat" type="skill" />
                                     </div>
 
                                     <div className="col-lg-7 checker-right-pane">
@@ -678,41 +644,9 @@
                                             <div className="checker-empty">No perfect 3/3 weapons found for this exact essence combination.</div>
                                         )}
 
-                                        {checkerModalSnapshot.p2Names.length > 0 && (
-                                            <div className="mb-4">
-                                                <h6 className="text-uppercase color-p2 mb-3" style={{letterSpacing: '1px'}}>Priority Essences ({checkerModalSnapshot.p2Names.length})</h6>
-                                                <div className="row g-2">
-                                                    {checkerModalSnapshot.p2Names.map(name => {
-                                                        const weapon = weaponsByName[name];
-                                                        return weapon ? <CompactWeapon key={name} w={weapon} /> : null;
-                                                    })}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {checkerModalSnapshot.p1Names.length > 0 && (
-                                            <div className="mb-4">
-                                                <h6 className="text-uppercase color-p1 mb-3" style={{letterSpacing: '1px'}}>Matched Essences ({checkerModalSnapshot.p1Names.length})</h6>
-                                                <div className="row g-2">
-                                                    {checkerModalSnapshot.p1Names.map(name => {
-                                                        const weapon = weaponsByName[name];
-                                                        return weapon ? <CompactWeapon key={name} w={weapon} /> : null;
-                                                    })}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {checkerModalSnapshot.p0Names.length > 0 && (
-                                            <div>
-                                                <h6 className="text-uppercase color-p0 mb-3" style={{letterSpacing: '1px'}}>Untracked Essences ({checkerModalSnapshot.p0Names.length})</h6>
-                                                <div className="row g-2">
-                                                    {checkerModalSnapshot.p0Names.map(name => {
-                                                        const weapon = weaponsByName[name];
-                                                        return weapon ? <CompactUntrackedWeapon key={name} w={weapon} /> : null;
-                                                    })}
-                                                </div>
-                                            </div>
-                                        )}
+                                        <CheckerModalSnapshotList weapons={checkerModalSnapshot.p2Names} text="Priority Essences" />
+                                        <CheckerModalSnapshotList weapons={checkerModalSnapshot.p1Names} text="Matched Essences" />
+                                        <CheckerModalSnapshotList weapons={checkerModalSnapshot.p0Names} text="Untracked Essences" />
                                     </div>
                                 </div>
                             </div>
@@ -758,31 +692,7 @@
                                             {(!collapsedCategories[cat] || filter) && (
                                                 <div className="row g-3">
                                                     {groupedWeapons[cat].map(w => (
-                                                        <div key={w.name} className="col-sm-6">
-                                                            <div className={`weapon-card priority-${priorities[w.name]}`} onClick={() => togglePriority(w.name)}>
-                                                                <div className={`card-accent accent-${w.rarity}`}></div>
-                                                                {priorities[w.name] === 2 && <span className="star-icon">★</span>}
-
-                                                                <div className="d-flex align-items-center">
-                                                                    <div className={`weapon-img-container img-bg-${w.rarity}`}>
-                                                                        <img src={`images/weapon_${weaponNameToImageName(w.name)}.png`} className="weapon-img" alt={w.name} onError={(e) => { e.target.onerror = null; e.target.src = weaponPlaceholder(w.type); }} />
-                                                                    </div>
-                                                                    <div className="flex-grow-1 min-width-0">
-                                                                        <div className={`fw-bold text-truncate ${priorities[w.name] === 2 ? 'color-p2' : (priorities[w.name] === 1 ? 'color-p1' : 'color-p0')}`} style={{fontSize: '1rem'}}>{w.name}</div>
-                                                                        <div className="d-flex align-items-center mt-1">
-                                                                            <span className={`color-${w.rarity}-rarity`} style={{fontSize: '0.8rem', fontWeight: 'bold'}}>{w.rarity}★</span>
-                                                                            <span className="mx-2 text-muted">|</span>
-                                                                            <span className={`text-uppercase color-${w.rarity}-rarity`} style={{fontSize: '0.7rem'}}>{w.type}</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="mt-3 pt-2 border-top border-secondary border-opacity-25 d-flex flex-wrap gap-1">
-                                                                    <span className="stat-badge">{w.attr_stat}</span>
-                                                                    <span className="stat-badge">{w.sec_stat}</span>
-                                                                    <span className="stat-badge">{w.skill_stat}</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                        <WeaponCard key={w.name} w={w} compact={false} />
                                                     ))}
                                                 </div>
                                             )}
@@ -813,71 +723,18 @@
                                                             <div className="fw-bold mb-1" style={{fontSize: '1.1rem', color: '#a0d8ef'}}>{r.location}</div>
                                                             <div className="mb-2" style={{fontSize: '0.75rem'}}>
                                                                 <span className="text-uppercase" style={{letterSpacing: '0.5px', color: '#aaa'}}>Matches: </span>
-                                                                <span className="color-p2 fw-bold">{r.p2Count}</span>
-                                                                <span className="mx-1 text-muted opacity-50">|</span>
-                                                                <span className="color-p1 fw-bold">{r.p1Count}</span>
-                                                                <span className="mx-1 text-muted opacity-50">|</span>
-                                                                <span className="color-p0 fw-bold">{r.p0Count}</span>
+                                                                <span className="mx-1 color-p2 fw-bold">{r.p2List.length}</span>
+                                                                <span className="mx-1 color-p1 fw-bold">{r.p1List.length}</span>
+                                                                <span className="mx-1 color-p0 fw-bold">{r.p0List.length}</span>
                                                             </div>
                                                             <div className="mt-2">
                                                                 {renderEngravingGroups(r.engravingGroups)}
                                                             </div>
                                                         </td>
                                                         <td className="align-middle pe-3">
-                                                            <div className="outcome-row">
-                                                                <div className="weapon-container-right">
-                                                                    {r.p2List.map(o => {
-                                                                        const uid = `p2-${i}-${o.name}`;
-                                                                        return (
-                                                                            <span key={uid} 
-                                                                                className="weapon-name-box color-p2"
-                                                                                onMouseEnter={(e) => { e.stopPropagation(); setActiveTooltip(uid); }}
-                                                                                onMouseLeave={(e) => { e.stopPropagation(); setActiveTooltip(null); }}
-                                                                                onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === uid ? null : uid); }}
-                                                                            >
-                                                                                {o.name}
-                                                                                <Tooltip weapon={o} uniqueId={uid} />
-                                                                            </span>
-                                                                        );
-                                                                    })}
-                                                                </div>
-                                                            </div>
-                                                            <div className="outcome-row">
-                                                                <div className="weapon-container-right">
-                                                                    {r.p1List.map(o => {
-                                                                        const uid = `p1-${i}-${o.name}`;
-                                                                        return (
-                                                                            <span key={uid} 
-                                                                                className="weapon-name-box color-p1"
-                                                                                onMouseEnter={(e) => { e.stopPropagation(); setActiveTooltip(uid); }}
-                                                                                onMouseLeave={(e) => { e.stopPropagation(); setActiveTooltip(null); }}
-                                                                                onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === uid ? null : uid); }}
-                                                                            >
-                                                                                {o.name}
-                                                                                <Tooltip weapon={o} uniqueId={uid} />
-                                                                            </span>
-                                                                        );
-                                                                    })}
-                                                                </div>
-                                                            </div>
-                                                            <div className="outcome-row">
-                                                                <div className="weapon-container-right">
-                                                                    {r.p0List.map(o => {
-                                                                        const uid = `p0-${i}-${o.name}`;
-                                                                        return (
-                                                                            <span key={uid} 
-                                                                                className="weapon-name-box color-p0"
-                                                                                onMouseEnter={(e) => { e.stopPropagation(); setActiveTooltip(uid); }}
-                                                                                onMouseLeave={(e) => { e.stopPropagation(); setActiveTooltip(null); }}
-                                                                                onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === uid ? null : uid); }}
-                                                                            >
-                                                                                {o.name}
-                                                                                <Tooltip weapon={o} uniqueId={uid} />
-                                                                            </span>
-                                                                        );
-                                                                    })}
-                                                                </div>
-                                                            </div>
+                                                            <EssenceMatchesList list={r.p2List} p="p2" listIndex={i} />
+                                                            <EssenceMatchesList list={r.p1List} p="p1" listIndex={i} />
+                                                            <EssenceMatchesList list={r.p0List} p="p0" listIndex={i} />
                                                         </td>
                                                     </tr>
                                                 ))}
