@@ -22,6 +22,13 @@
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
+        const None = 'None';
+        const isNone = (value) => value === None;
+        const isNotNone = (value) => !isNone(value);
+
+        String.prototype.isNone = function () { return isNone(this); };
+        String.prototype.isNotNone = function () { return isNotNone(this); };
+        Array.prototype.excludeNone = function () { return this.filter(isNotNone); };
 
         const CATEGORY_ORDER = ['Greatsword', 'Handcannon', 'Arts Unit', 'Sword', 'Polearm'];
 
@@ -40,9 +47,9 @@
             const [importExportError, setImportExportError] = useState('');
             const [selectedResult, setSelectedResult] = useState(null);
             const [checkerFilters, setCheckerFilters] = useState({
-                attribute: 'None',
-                secondary: 'None',
-                skill: 'None'
+                attribute: None,
+                secondary: None,
+                skill: None
             });
             const [checkerModalSnapshot, setCheckerModalSnapshot] = useState({
                 p2Names: [],
@@ -130,7 +137,7 @@
             };
 
             const resetCheckerFilters = () => {
-                setCheckerFilters({ attribute: 'None', secondary: 'None', skill: 'None' });
+                setCheckerFilters({ attribute: None, secondary: None, skill: None });
             };
 
             const openEssenceCheckerModal = () => {
@@ -247,6 +254,7 @@
 
             const results = useMemo(() => {
                 if (!data || !priorities) return [];
+
                 const solverResults = [];
                 const locations = data.alluvium;
 
@@ -266,8 +274,8 @@
                                 if (!attrSel.includes(w.attr_stat)) return;
 
                                 const isMatch = sel.type === 'secondary'
-                                    ? ((w.sec_stat === sel.val || w.rarity === 3) && locData.skill.includes(w.skill_stat))
-                                    : (w.skill_stat === sel.val && (w.rarity === 3 || locData.secondary.includes(w.sec_stat)));
+                                    ? ((w.sec_stat === sel.val || w.sec_stat.isNone()) && locData.skill.includes(w.skill_stat))
+                                    : (w.skill_stat === sel.val && (w.skill_stat.isNone() || locData.secondary.includes(w.sec_stat)));
 
                                 if (isMatch) {
                                     const p = priorities[w.name] ?? 1;
@@ -357,14 +365,14 @@
                 if (!data || !priorities) return { p2: [], p1: [], p0: [], total: 0, selectedCount: 0 };
 
                 const selectedCount =
-                    (checkerFilters.attribute !== 'None' ? 1 : 0) +
-                    (checkerFilters.secondary !== 'None' ? 1 : 0) +
-                    (checkerFilters.skill !== 'None' ? 1 : 0);
+                    (checkerFilters.attribute.isNotNone() ? 1 : 0) +
+                    (checkerFilters.secondary.isNotNone() ? 1 : 0) +
+                    (checkerFilters.skill.isNotNone() ? 1 : 0);
 
                 const perfect = data.weapons.filter(w => {
-                    if (checkerFilters.attribute !== 'None' && w.attr_stat !== checkerFilters.attribute) return false;
-                    if (checkerFilters.secondary !== 'None' && w.sec_stat !== checkerFilters.secondary) return false;
-                    if (checkerFilters.skill !== 'None' && w.skill_stat !== checkerFilters.skill) return false;
+                    if (checkerFilters.attribute.isNotNone() && w.attr_stat.isNotNone() && w.attr_stat !== checkerFilters.attribute) return false;
+                    if (checkerFilters.secondary.isNotNone() && w.sec_stat.isNotNone() && w.sec_stat !== checkerFilters.secondary) return false;
+                    if (checkerFilters.skill.isNotNone() && w.skill_stat.isNotNone() && w.skill_stat !== checkerFilters.skill) return false;
                     return true;
                 });
 
