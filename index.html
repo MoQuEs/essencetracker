@@ -22,15 +22,13 @@
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
+
         const None = 'None';
         const isNone = (value) => value === None;
         const isNotNone = (value) => !isNone(value);
 
         String.prototype.isNone = function () { return isNone(this); };
         String.prototype.isNotNone = function () { return isNotNone(this); };
-        Array.prototype.excludeNone = function () { return this.filter(isNotNone); };
-
-        const CATEGORY_ORDER = ['Greatsword', 'Handcannon', 'Arts Unit', 'Sword', 'Polearm'];
 
         function App() {
             const [data, setData] = useState(null);
@@ -38,6 +36,7 @@
                 const saved = localStorage.getItem('endfield_priorities_v5');
                 return saved ? JSON.parse(saved) : null;
             });
+            const [attrCombos, setAttrCombos] = useState(null);
             const [filter, setFilter] = useState('');
             const [showResetModal, setShowResetModal] = useState(false);
             const [showImportExportModal, setShowImportExportModal] = useState(false);
@@ -78,6 +77,7 @@
                             });
                             return merged;
                         });
+                        setAttrCombos(combinations(json.attribute, 3));
                     });
             }, []);
 
@@ -249,9 +249,6 @@
                 return result;
             };
 
-            const attributes = ['Strength', 'Agility', 'Will', 'Intellect', 'Main Attribute'];
-            const attrCombos = useMemo(() => combinations(attributes, 3), []);
-
             const results = useMemo(() => {
                 if (!data || !priorities) return [];
 
@@ -322,7 +319,7 @@
             const groupedWeapons = useMemo(() => {
                 if (!data) return {};
                 const groups = {};
-                CATEGORY_ORDER.forEach(cat => groups[cat] = []);
+                data.weaponcategory.forEach(cat => groups[cat] = []);
                 data.weapons.forEach(w => {
                     if (w.name.toLowerCase().includes(filter.toLowerCase())) groups[w.type]?.push(w);
                 });
@@ -336,10 +333,10 @@
             }, [data, filter]);
 
             const categoryCounts = useMemo(() => {
-                if (!priorities) return {};
+                if (!data || !priorities || !attrCombos) return {};
                 const counts = {};
 
-                CATEGORY_ORDER.forEach(cat => {
+                data.weaponcategory.forEach(cat => {
                     let p0 = 0;
                     let p1 = 0;
                     let p2 = 0;
@@ -530,6 +527,12 @@
                 <div className="checker-section">
                     <div className="text-uppercase fw-bold mb-2" style={{fontSize: '0.78rem', letterSpacing: '0.7px', color: '#aaa'}}>{text}</div>
                     <div className="d-flex flex-wrap gap-2">
+                        <button
+                                className={`checker-chip ${checkerFilters[type] === None ? 'checker-chip-active' : ''}`}
+                                onClick={() => setCheckerFilters(prev => ({ ...prev, [type]: None }))}
+                        >
+                            {None}
+                        </button>
                         {data[type].map(option => (
                             <button
                                 key={`${type}-${option}`}
@@ -687,7 +690,7 @@
                             </div>
                             
                             <div className="pe-2">
-                                {CATEGORY_ORDER.map(cat => (
+                                {data.weaponcategory.map(cat => (
                                     groupedWeapons[cat].length > 0 && (
                                         <div key={cat}>
                                             {(() => {

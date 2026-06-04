@@ -1,6 +1,5 @@
 {
   "attribute": [
-    "None",
     "Agility",
     "Intellect",
     "Main Attribute",
@@ -8,7 +7,6 @@
     "Will"
   ],
   "secondary": [
-    "None",
     "Arts DMG Boost",
     "Arts Intensity Boost",
     "Attack Boost",
@@ -23,7 +21,6 @@
     "Ultimate Gain Boost"
   ],
   "skill": [
-    "None",
     "Assault",
     "Brutality",
     "Combative",
@@ -794,5 +791,12 @@
         "Flow"
       ]
     }
-  }
+  },
+  "weaponcategory": [
+    "Greatsword",
+    "Handcannon",
+    "Arts Unit",
+    "Sword",
+    "Polearm"
+  ]
 }
