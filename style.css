@@ -166,11 +166,17 @@ body {
     border-radius: 4px;
     transition: all 0.2s;
     cursor: pointer;
+    text-decoration: none;
 }
 .reset-btn:hover {
     background: #333;
     border-color: #666;
     color: #eee;
+}
+
+.btn-yellow {
+    border: 1px solid #51421f;
+    color: #9a8042;
 }
 
 .color-p2 { color: #eef6ff !important; border-color: #eef6ff !important; }
