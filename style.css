@@ -99,8 +99,7 @@ body {
 .priority-0 { opacity: 0.5; filter: grayscale(0.5); }
 
 .priority-2 {
-    box-shadow: 0 0 0 2px #eef6ff;
-    border-color: #eef6ff !important;
+    box-shadow: 0 2px 0 1px #eef6ff;
 }
 
 .star-icon {
